@@ -1,53 +1,78 @@
-# 多模态缺失学习框架
+# Missing Modality Prompt Learning Framework
 
-一个完整的多模态缺失学习框架，支持GPU加速训练和测试，能够处理多模态数据中的缺失模态问题。
+A comprehensive multimodal learning framework with GPU acceleration support for training and testing, designed to handle missing modality problems in multimodal data.
 
-## 项目概述
+## Project Overview
 
-本项目实现了一个先进的多模态学习系统，专门设计用于处理现实世界中常见的缺失模态问题。系统采用提示学习、分层蒸馏和对比学习等技术，能够在部分模态缺失的情况下保持高性能。
+This project implements an advanced multimodal learning system specifically designed to handle missing modality problems common in real-world scenarios. The system employs prompt learning, hierarchical distillation, and contrastive learning techniques to maintain high performance even when some modalities are missing.
 
+## Key Features
 
-## 核心模块
+- **70% Missing Rate Support**: Handles extreme missing modality scenarios
+- **Multiple Datasets**: Supports MM-IMDb, Food101, Hateful Memes, and CMU-MOSEI
+- **Proper Evaluation Metrics**: 
+  - MM-IMDb: Macro-F1 
+  - Food101: Accuracy 
+  - Hateful Memes: AUROC 
+  - CMU-MOSEI: Accuracy 
+- **GPU Acceleration**: Seamless CPU/GPU switching with MPS support
+- **Three-Stage Training**: Teacher → Inference → Runtime Calibration (CPA)
 
-### 1. 模态编码器 (`incomplete_multimodal_learning.py`)
-- 支持文本、图像、音频三种模态
-- 冻结的预训练编码器
-- 空标记生成器处理缺失模态
+## Core Architecture
 
-### 2. 提示生成器
-- **模态级提示** (`modality_prompts_v2.py`): 基于存在掩码生成上下文提示
-- **实例级提示** (`dual_prompts_v3.py`): 专业化和泛化双分支设计
+### 1. Modality Encoders (`pag_mpd/core/`)
+- **Text, Image, Audio**: Three-modality support
+- **Frozen Encoders**: Pre-trained backbone networks
+- **Null Token Generation**: Handles missing modalities
 
-### 3. 知识蒸馏 (`hierarchical_distillation.py`)
-- 教师模型和推理网络
-- 多层级特征蒸馏
-- 软标签预测蒸馏
+### 2. Prompt Systems
+- **Modality-Level Prompts** (`modality_prompts_v2.py`): Context-aware prompts based on presence masks
+- **Instance-Level Prompts** (`dual_prompts_v3.py`): Specialization and generalization dual-branch design
 
-### 4. 对比学习 (`hard_negative_contrastive.py`)
-- 硬负样本挖掘
-- InfoNCE损失实现
-- 类别原型学习
+### 3. Knowledge Distillation (`hierarchical_distillation.py`)
+- **Teacher-Student Framework**: Complete data → Incomplete data knowledge transfer
+- **Multi-Level Distillation**: Feature and prediction level alignment
+- **Mask Adapter**: FiLM-style adaptation for different missing patterns
 
-### 5. 自适应调整 (`calibrated_prompt_adaptation.py`)
-- 单步提示适应
-- 熵正则化
-- 分布对齐
+### 4. Contrastive Learning (`hard_negative_contrastive.py`)
+- **Hard Negative Mining**: InfoNCE loss with class prototypes
+- **Specialization Branch**: Targeted contrastive supervision
+- **Class Boundary Sharpening**: Improved discrimination
 
-### 6. GPU接口 (`gpu_interface.py`)
-- 设备管理器
-- 模型包装器
-- 数据加载器包装
+### 5. Runtime Adaptation (`calibrated_prompt_adaptation.py`)
+- **Single-Step CPA**: Fast inference-time adaptation
+- **Entropy Regularization**: Confident prediction promotion
+- **Distribution Alignment**: Teacher statistics matching
 
-## 安装和使用
+### 6. GPU Interface (`gpu_interface.py`)
+- **Device Manager**: Automatic CUDA/MPS/CPU detection
+- **Model Wrapper**: Seamless device switching
+- **DataLoader Wrapper**: Efficient batch processing
 
-### 环境要求
+## Installation and Usage
+
+### Environment Requirements
 
 ```bash
+# Core dependencies
 torch>=1.9.0
 torchvision>=0.10.0
-pytorch_lightning>=1.1.4
 transformers>=4.2.1
-opencv-python
+scikit-learn>=0.24.0
+opencv-python>=4.5.0
 Pillow>=9.3.0
 numpy>=1.19.5
+
+# Optional for advanced features
+pytorch_lightning>=1.1.4
+pyarrow>=5.0.0
 ```
+
+### Quick Start
+
+```bash
+# Install dependencies
+pip install -r pag_mpd/requirements.txt
+
+cd pag_mpd
+python main.py --dataset xxx --missing_rate xxx
